@@ -1,7 +1,8 @@
 import asyncio
 
 from .manager import FinancialResearchManager
-from .set_azure_openai_client import *
+from examples.set_azure_openai_client import *
+
 # import examples.financial_research_agent.set_azure_openai_client
 
 # Entrypoint for the financial bot example.

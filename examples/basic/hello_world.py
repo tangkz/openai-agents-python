@@ -1,7 +1,7 @@
 import asyncio
 
 from agents import Agent, Runner
-
+from examples.set_azure_openai_client import *
 
 async def main():
     agent = Agent(
