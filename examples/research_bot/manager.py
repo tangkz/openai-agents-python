@@ -19,35 +19,44 @@ class ResearchManager:
         self.printer = Printer(self.console)
 
     async def run(self, query: str) -> None:
-        trace_id = gen_trace_id()
-        with trace("Research trace", trace_id=trace_id):
-            self.printer.update_item(
-                "trace_id",
-                f"View trace: https://platform.openai.com/traces/{trace_id}",
-                is_done=True,
-                hide_checkmark=True,
-            )
+        import os
 
-            self.printer.update_item(
-                "starting",
-                "Starting research...",
-                is_done=True,
-                hide_checkmark=True,
-            )
-            search_plan = await self._plan_searches(query)
-            search_results = await self._perform_searches(search_plan)
-            report = await self._write_report(query, search_results)
+        llm_vendor = os.getenv("LLM_VENDOR")
 
-            final_report = f"Report summary\n\n{report.short_summary}"
-            self.printer.update_item("final_report", final_report, is_done=True)
+        if llm_vendor == "openai":
+            # Only use tracing with OpenAI
+            trace_id = gen_trace_id()
+            with trace("Research trace", trace_id=trace_id):
+                self.printer.update_item(
+                    "trace_id",
+                    f"View trace: https://platform.openai.com/traces/{trace_id}",
+                    is_done=True,
+                    hide_checkmark=True,
+                )
 
-            self.printer.end()
+        # Skip tracing for Azure OpenAI
+        self.printer.update_item(
+            "starting",
+            "Starting research...",
+            is_done=True,
+            hide_checkmark=True,
+        )
+        await self._execute_research(query)
 
         print("\n\n=====REPORT=====\n\n")
-        print(f"Report: {report.markdown_report}")
+        print(f"Report: {self.report.markdown_report}")
         print("\n\n=====FOLLOW UP QUESTIONS=====\n\n")
-        follow_up_questions = "\n".join(report.follow_up_questions)
+        follow_up_questions = "\n".join(self.report.follow_up_questions)
         print(f"Follow up questions: {follow_up_questions}")
+
+    async def _execute_research(self, query: str) -> None:
+        search_plan = await self._plan_searches(query)
+        search_results = await self._perform_searches(search_plan)
+        self.report = await self._write_report(query, search_results)
+
+        final_report = f"Report summary\n\n{self.report.short_summary}"
+        self.printer.update_item("final_report", final_report, is_done=True)
+        self.printer.end()
 
     async def _plan_searches(self, query: str) -> WebSearchPlan:
         self.printer.update_item("planning", "Planning searches...")
