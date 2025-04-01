@@ -10,7 +10,7 @@ load_dotenv()
 
 if os.getenv("LLM_VENDOR") == "openai":
     set_default_openai_key(os.getenv("OPENAI_API_KEY"))
-elif os.getenv("LLM_VENDOR") != "azure_openai":
+elif os.getenv("LLM_VENDOR") == "azure_openai":
     # Create OpenAI client using Azure OpenAI
     openai_client = AsyncAzureOpenAI(
         api_key=os.getenv("AZURE_OPENAI_API_KEY"),
